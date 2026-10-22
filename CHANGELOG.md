@@ -2,6 +2,13 @@
 
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.2.1] - 2026-10-22
+
+仅版本号递增，无代码变更。
+
+- 0.2.0 在 registry 侧卡在「元数据已写入、tarball 未落地」的半发布状态（tarball 404，stage 列表为空，且 409 拒绝覆盖），
+  故以 0.2.1 重新发布。0.2.0 已标记 deprecated。
+
 ## [0.2.0] - 2026-10-22
 
 从「只跑到 downloading 的半成品」变成 7 阶段闭环。工具 5 → 15 个。
