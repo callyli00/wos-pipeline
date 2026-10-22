@@ -43,11 +43,11 @@ N 出 50–300 区间时，**不许自己加词、删层、改字段、换运算
 
 判断用哪条的依据永远是 observe / extract 的结构输出，不是记忆。
 
-**人机验证的具体处置**
+**人机验证的结构特征（处置见上方 R3，此处只列识别方法）**
 
-- Cloudflare 那种「请稍候 / Just a moment」：**先等 8–10 秒重新 observe 一次**，多数会自动放行，不必惊动用户。
-- hCaptcha / reCAPTCHA（`dialog` + `Iframe "hCaptcha挑战"` + `Challenge Image 1..9`）：
-  `bsk_assist { action:"request-help", prompt:"…", completionCriteria:{ any:[{textMissing:"verify you are human"},{urlContains:"/wos/woscc/summary"}] } }`
+- Cloudflare「请稍候 / Just a moment」：先等 8–10 秒重新 observe 一次，多数自动放行；仍不过按 R3 交人。
+- hCaptcha / reCAPTCHA：`dialog` + `Iframe "hCaptcha挑战"` + `Challenge Image 1..9` 节点。
+- 结构化完成判据一律按 R3 写（**正向信号**，禁止 `textMissing`）。
 - **绝不 `bsk_session stop`**：会连浏览器一起关掉，验证页随之消失，用户就没得做了。
 - 用户回来后重新 observe，确认 `dialog`/`Iframe` 消失才继续；不替用户点、不猜已通过。
 
