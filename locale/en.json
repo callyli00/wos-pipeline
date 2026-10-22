@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "WOS Literature Pipeline",
+    "description": "Tracks a Web of Science search as a typed ledger: query-iteration history with a 50-300 result gate (query changes require explicit user confirmation), PDF intake with %PDF- auditing, parse orchestration via dsh-pdf-mineru, and knowledge-base scaffolding with five-layer lint/index."
+  }
+}

@@ -1,0 +1,14 @@
+# 本 bundle 向 profile 贡献的配置层。
+# 在 profile 自己的 cordis.patch.yml 里覆盖 id: wos-pipeline 那一行可改这些值；
+# patch 是整块替换 config，需要保留的字段要一并写出。
+- insert:
+    - id: wos-pipeline
+      name: 'dsh-wos-pipeline'
+      config:
+        runsRoot: ''
+        wikiRoot: ''
+        gate:
+          min: 50
+          max: 300
+          maxAttempts: 3
+        pageSize: 20

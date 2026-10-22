@@ -1,0 +1,70 @@
+{
+  "name": "dsh-wos-pipeline",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Web of Science 文献流水线插件：检索式迭代历史与数量闸门（未过闸门强制用户确认检索词）、PDF 收编与 %PDF- 审计、解析编排（复用 dsh-pdf-mineru）、知识库骨架与五层 lint/index（llm-wiki 机械能力）。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "web-of-science",
+    "wos",
+    "literature-review",
+    "systematic-review",
+    "bibliography",
+    "pdf",
+    "knowledge-base",
+    "research"
+  ],
+  "license": "MIT",
+  "author": "callyli00",
+  "homepage": "https://github.com/callyli00/wos-pipeline#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/callyli00/wos-pipeline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/callyli00/wos-pipeline/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "lib/*.js",
+    "data/playbook/*.md",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "peerDependencies": {
+    "dsh-pdf-mineru": ">=0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "dsh-pdf-mineru": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs && node test/load.mjs && node test/tools-exec.mjs",
+    "test:smoke": "node test/smoke.mjs",
+    "test:load": "node test/load.mjs",
+    "test:tools": "node test/tools-exec.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
