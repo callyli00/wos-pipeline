@@ -1,0 +1,54 @@
+{
+  "format": 1,
+  "title": {
+    "en": "callyli00 DSH plugins",
+    "zh": "callyli00 的 DSH 插件源"
+  },
+  "description": {
+    "en": "Self-hosted plugin index for DeepSeek Harness. Add this URL as an extra index in the plugin market to receive updates.",
+    "zh": "DeepSeek Harness 的自建插件索引。在市场里把它加为额外索引源，即可自动检测更新。"
+  },
+  "metadata": {},
+  "plugins": [
+    {
+      "name": "dsh-wos-pipeline",
+      "title": "WOS 文献流水线 / WOS Literature Pipeline",
+      "description": {
+        "zh": "Web of Science 文献流水线：7 阶段账本状态机、检索式迭代历史与数量闸门（未过闸门强制用户确认检索词）、PDF 收编与 %PDF- 审计、解析编排（复用 dsh-pdf-mineru）、知识库骨架与五层 lint/index。共 15 个工具。",
+        "en": "Web of Science literature pipeline: a 7-stage ledger state machine with query-iteration history and a count gate that forces user confirmation, PDF intake with %PDF- auditing, parse orchestration (via dsh-pdf-mineru), and knowledge-base scaffolding plus five-layer lint/index. 15 tools."
+      },
+      "homepage": "https://github.com/callyli00/wos-pipeline#readme",
+      "repository": {
+        "url": "https://github.com/callyli00/wos-pipeline"
+      },
+      "metadata": {
+        "category": "workflow",
+        "keywords": [
+          "dsh",
+          "dsh-plugin",
+          "web-of-science",
+          "wos",
+          "literature-review",
+          "systematic-review",
+          "bibliography",
+          "pdf",
+          "knowledge-base"
+        ],
+        "labels": [],
+        "sortKeys": {}
+      },
+      "versions": [
+        {
+          "version": "0.2.2",
+          "publishTimestamp": 1792655351,
+          "source": {
+            "type": "npm"
+          },
+          "engines": {
+            "node": ">=18"
+          }
+        }
+      ]
+    }
+  ]
+}
