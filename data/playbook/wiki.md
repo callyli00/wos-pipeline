@@ -1,4 +1,4 @@
-# 阶段 wiki：llm-wiki 建库口径
+# 阶段 wiki：知识库建库口径
 
 三层架构：`raw/`（不可变源）→ wiki 页（`papers/` `entities/` `concepts/` `comparisons/` `queries/`）
 → `SCHEMA.md`（约束）。机械部分由插件工具做，页面内容由你读全文后写。

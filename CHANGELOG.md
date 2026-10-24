@@ -2,6 +2,23 @@
 
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.3.1] - 2026-10-24
+
+### Changed
+
+- **去掉对 skill 的依赖**，插件成为唯一口径来源：
+  - `data/playbook/wiki.md` 标题与措辞不再指向 `llm-wiki`；
+  - `wos_parse_plan` / `wos_wiki_init` 的 `reason` 文案改为「按 wiki 阶段口径（playbook wiki.md）」，不再让模型去找一个已不存在的 skill；
+  - `package.json` / `locale/zh.json` 描述更新，并注明「全流程不依赖任何 skill」；
+  - README 依赖章节补充说明：唯一相关的是 `browser-skill`（它只是给 `bsk_*` 工具开权限，不是流程 skill）。
+- 与本插件重复的三个 skill（`wos-literature-pipeline`、`llm-wiki`、`doi-pdf-batch-download`）已在本机退役到
+  `~/.dsh/skills-retired-20261024/`，移出 skills 目录即可，随时可搬回。
+
+### Why
+
+插件已覆盖全部七阶段口径，但 skill 目录里仍并列着同名流程，模型可能加载 skill 而绕开插件的闸门、
+守卫与账本——那等于把最容易被违反的三条硬规则（检索词确认、关 tab、交人验证）重新变回无人看守。
+
 ## [0.3.0] - 2026-10-24
 
 把「忘关 tab」「没把人机验证交给用户」从**文档提醒**升级为**账本状态**。

@@ -1,8 +1,8 @@
 {
   "name": "dsh-wos-pipeline",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
-  "description": "Web of Science 文献流水线插件：检索式迭代历史与数量闸门（未过闸门强制用户确认检索词）、PDF 收编与 %PDF- 审计、解析编排（复用 dsh-pdf-mineru）、知识库骨架与五层 lint/index（llm-wiki 机械能力）。",
+  "description": "Web of Science 文献流水线插件：检索式迭代历史与数量闸门（未过闸门强制用户确认检索词）、PDF 收编与 %PDF- 审计、解析编排（复用 dsh-pdf-mineru）、知识库骨架与五层 lint/index、浏览器作业守卫（强制关 tab / 强制把验证交给人）。全流程不依赖任何 skill。",
   "keywords": [
     "dsh",
     "dsh-plugin",

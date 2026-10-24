@@ -101,6 +101,10 @@ npm test          # 87 条断言，不需要网络与浏览器
 - **必需**：DSH 本体（提供 `tools` 服务与浏览器插件）
 - **解析阶段需要** [`dsh-pdf-mineru`](https://www.npmjs.com/package/dsh-pdf-mineru)：本插件不重造 MinerU 客户端，
   只负责"该解析哪些、产物该落在哪、状态怎么回填"。未安装时前四个阶段仍可正常使用。
+- **不需要任何 skill**：七个阶段的口径全部内置于 `data/playbook/*.md`，由工具在合适的时点带出来。
+  唯一相关的是 `browser-skill` —— 它负责给 `bsk_*` 浏览器工具开权限（懒注册），不是流程 skill；
+  不装它则下载阶段无法动浏览器。曾与其重复的 `wos-literature-pipeline` / `llm-wiki` /
+  `doi-pdf-batch-download` 三个 skill 已退役，避免模型同时看到两套口径。
 
 ## 任务目录结构
 
