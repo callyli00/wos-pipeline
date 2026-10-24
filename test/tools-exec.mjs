@@ -130,6 +130,46 @@ async function main() {
   const lintOut = await call('wos_wiki_lint', { wikiRoot });
   check('wos_wiki_lint 正常', scan(lintOut).length === 0 && lintOut.coverageConsistent === true, scan(lintOut).join(', '));
 
+  console.log('\n[5] 浏览器作业守卫：忘关 tab / 忘交人验证会被拦住');
+
+  // 人机验证：没给正向判据必须拒绝
+  try {
+    await call('wos_human_verify', { dir, reason: 'Cloudflare' });
+    check('没给正向判据时拒绝交接', false, '居然通过了');
+  } catch (error) {
+    check('没给正向判据时拒绝交接', String(error.message).includes('CRITERIA_REQUIRED'), error.message.slice(0, 70));
+  }
+
+  // 给正向判据 → 生成 bsk_assist 调用，并挡住下载计划
+  const verifyPrepare = await call('wos_human_verify', { dir, reason: 'Cloudflare', titleText: 'Coffee-ring suppression' });
+  check('交接返回 bsk_assist 调用', verifyPrepare.bskAssistCall?.action === 'request-help', JSON.stringify(verifyPrepare.bskAssistCall?.action));
+  check('判据是正向信号', JSON.stringify(verifyPrepare.bskAssistCall.completionCriteria).includes('textExists'));
+  check('交接带 mustDoNow 提示', Array.isArray(verifyPrepare.mustDoNow) && verifyPrepare.mustDoNow.length > 0);
+  check('交接结果 lossless', scan(verifyPrepare).length === 0, scan(verifyPrepare).join(', '));
+
+  const blockedPlan = await call('wos_download_plan', { dir });
+  check('验证未收口时下载计划被拦', blockedPlan.blocked === true && blockedPlan.plan === null, JSON.stringify(blockedPlan.blocked));
+  check('拦住时指向 wos_human_verify', blockedPlan.requiredTool === 'wos_human_verify', blockedPlan.requiredTool);
+  check('拦住时要求用户交互', blockedPlan.requiresUserInteraction === true);
+  check('拦住结果 lossless', scan(blockedPlan).length === 0, scan(blockedPlan).join(', '));
+
+  // 收口后放行
+  const verifyResolved = await call('wos_human_verify', { dir, resolved: true, outcome: 'passed' });
+  check('收口后 gate 不 pending', verifyResolved.gate?.pending === false, JSON.stringify(verifyResolved.gate?.pending));
+  const afterResolve = await call('wos_download_plan', { dir });
+  check('收口后下载计划恢复', afterResolve.blocked !== true && Array.isArray(afterResolve.groups), JSON.stringify(afterResolve.blocked));
+
+  // tab 自检：数量不为 1 必须拒绝
+  const badHygiene = await call('wos_browser_hygiene', { dir, agentTabCount: 3 });
+  check('agentTabCount>1 上报被拒', badHygiene.ok === false && badHygiene.code === 'HYGIENE_TABS_REMAIN', badHygiene.code);
+  check('被拒时给出 mustDoNow', Array.isArray(badHygiene.mustDoNow) && badHygiene.mustDoNow.length > 0);
+  const noCount = await call('wos_browser_hygiene', { dir });
+  check('缺 agentTabCount 时报参数错', noCount.ok === false && noCount.code === 'HYGIENE_COUNT_INVALID', noCount.code);
+
+  const goodHygiene = await call('wos_browser_hygiene', { dir, agentTabCount: 1 });
+  check('agentTabCount=1 上报通过', goodHygiene.ok === true && goodHygiene.agentTabCount === 1, goodHygiene.code ?? JSON.stringify(goodHygiene.ok));
+  check('自检结果 lossless', scan(goodHygiene).length === 0, scan(goodHygiene).join(', '));
+
   // 复原真实账本（测试不该留下痕迹）
   if (backupJson) fs.writeFileSync(runJsonPath, backupJson, 'utf8');
   if (backupMd) fs.writeFileSync(mdPath, backupMd, 'utf8');

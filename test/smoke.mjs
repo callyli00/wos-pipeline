@@ -20,6 +20,12 @@ import {
   recordAttempt,
   reviseQuery,
   waiveGate,
+  ensureGuard,
+  guardBlock,
+  noteIntakeGuard,
+  reportHygiene,
+  setHumanGate,
+  resolveHumanGate,
 } from '../lib/run.js';
 import { parseSavedrecs, dedupe, toLedgerRecords, canonicalPdfName } from '../lib/savedrecs.js';
 import { downloadPlan, intakePdf, auditDownloads, pdfMagicOk, publisherOf } from '../lib/download.js';
@@ -370,6 +376,65 @@ async function main() {
     }
     check('cap 分支带 userDecided', nextStep(capped).args.userDecided === true);
     check('未到 cap 时 args 不含 userDecided 键', !('userDecided' in nextStep(wide).args));
+  }
+
+  console.log('\n[11] 浏览器作业守卫（防「忘关 tab / 忘交人验证」）');
+  {
+    const bare = readRun(run.dir);
+    delete bare.guard;
+    const filled = ensureGuard(bare);
+    check('老账本无 guard 字段时自动补齐', Array.isArray(filled.pendingTabCloses) && filled.humanGate === null);
+
+    const g1 = noteIntakeGuard(run, { spawnedTabId: 'tab-AAA', n: 7 });
+    check('收编时登记待关 tab', g1.pendingTabCloses.length === 1 && g1.pendingTabCloses[0].tabId === 'tab-AAA');
+    check('登记后 lastIntakeAt 非空', typeof g1.lastIntakeAt === 'string');
+    check('有 pending tab 时 nextStep 指向 wos_browser_hygiene', nextStep(run).tool === 'wos_browser_hygiene');
+    check('guardBlock 报出待关的 tab id', (guardBlock(run)?.reason ?? '').includes('tab-AAA'));
+
+    const tooMany = reportHygiene(run, { agentTabCount: 3 });
+    check('agentTabCount>1 判未清干净', tooMany.ok === false && tooMany.code === 'HYGIENE_TABS_REMAIN');
+    check('agentTabCount>1 记入 violations', ensureGuard(run).violations.length >= 1);
+
+    const stillPending = reportHygiene(run, { agentTabCount: 1 });
+    check('只报数不关 tab 仍被拒', stillPending.ok === false && stillPending.pendingTabCloses.length === 1);
+
+    const clean = reportHygiene(run, { closed: ['tab-AAA'], agentTabCount: 1 });
+    check('关掉并报 1 后自检通过', clean.ok === true && clean.agentTabCount === 1);
+    check('自检通过后不再指向 hygiene', nextStep(run).tool !== 'wos_browser_hygiene');
+
+    noteIntakeGuard(run, { spawnedTabId: '', n: 8 });
+    check('收编后未自检同样被拦', nextStep(run).tool === 'wos_browser_hygiene');
+    reportHygiene(run, { agentTabCount: 1 });
+    check('补做自检后放行', nextStep(run).tool !== 'wos_browser_hygiene');
+
+    let criteriaError = null;
+    try {
+      setHumanGate(run, { reason: 'Cloudflare 挑战' });
+    } catch (error) {
+      criteriaError = error;
+    }
+    check('没给正向判据时报 CRITERIA_REQUIRED', criteriaError?.code === 'CRITERIA_REQUIRED');
+
+    const prepared = setHumanGate(run, { reason: 'Cloudflare 挑战', titleText: 'Coffee-ring suppression' });
+    check('交接生成 bsk_assist 调用', prepared.bskAssistCall?.action === 'request-help');
+    const criteriaText = JSON.stringify(prepared.bskAssistCall.completionCriteria);
+    check('判据用 textExists 正向信号', criteriaText.includes('textExists'));
+    check('判据不含 textMissing', !criteriaText.includes('textMissing'));
+    check('prompt 提示切到 Agent 窗口', prepared.bskAssistCall.prompt.includes('Agent 窗口'));
+    check('交接后 nextStep 指向 wos_human_verify', nextStep(run).tool === 'wos_human_verify');
+
+    noteIntakeGuard(run, { spawnedTabId: 'tab-BBB', n: 9 });
+    check('人机验证优先级高于 tab 自检', nextStep(run).tool === 'wos_human_verify');
+
+    const resolved = resolveHumanGate(run, { outcome: 'passed' });
+    check('收口后 gate 不再 pending', resolved.gate.pending === false && resolved.gate.outcome === 'passed');
+    check('收口后回到 tab 补救（tab-BBB 未关）', nextStep(run).tool === 'wos_browser_hygiene');
+    reportHygiene(run, { closed: ['tab-BBB'], agentTabCount: 1 });
+    writeRun(run);
+    check(
+      '全部清空后不再被守卫拦截',
+      nextStep(run).tool !== 'wos_browser_hygiene' && nextStep(run).tool !== 'wos_human_verify',
+    );
   }
 
   console.log(`\n结果：${pass} 通过，${failures.length} 失败`);

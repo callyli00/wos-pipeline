@@ -3,7 +3,11 @@
 按**出版商分组**集中下载，不要按记录序号打散——同一家的会话级校验只需过一次。
 
 **🚨 单线程、一篇一篇来**：同一时刻只允许有一个下载在跑。**不要并发开多个 tab、不要并行导航多个 DOI、不要批量提交**——并发是最容易触发 Cloudflare 挑战与机构 IP 封禁的行为。
-每篇的完整闭环是：**在工作 tab 里**导航 → （必要时交用户过验证）→ 点 PDF 链接（会开新 tab）→ 确认落盘 → `wos_pdf_intake` 收编 → **关掉那个新开的 tab** → 下一篇。
+每篇的完整闭环是：**在工作 tab 里**导航 → （必要时交用户过验证）→ 点 PDF 链接（会开新 tab）→ 确认落盘 → `wos_pdf_intake` 收编 → **关掉那个新开的 tab** → `wos_browser_hygiene` 上报 → 下一篇。
+
+> **这一步是强制的，不做会卡住**：`wos_pdf_intake` 带 `spawnedTabId` 时会把待关 tab 记进账本；
+> 只要没调 `wos_browser_hygiene` 报出 `agentTabCount`（应恒为 1），下一次 `wos_download_plan` 会返回
+> `blocked: true` 而不是给下一批，`next` 也只指向补救动作。实测「规则写在文档里」会被无视——做成账本状态才有效。
 
 > **tab 必须收敛**（见 R4）：出版商的 PDF 链接多是 `target=_blank`，每点一次开一个 tab，且活动 tab 会跟着切过去。
 > 收编完成后立刻 `bsk_tabs {action:"close", tabId}` 关掉它，并定期 `bsk_tabs {action:"list", scope:"agent"}` 自查——agent tab 应恒为 1。

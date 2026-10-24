@@ -2,6 +2,31 @@
 
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.3.0] - 2026-10-24
+
+把「忘关 tab」「没把人机验证交给用户」从**文档提醒**升级为**账本状态**。
+
+### Added
+
+- **浏览器作业守卫 `guard`**：
+  - `wos_pdf_intake` 新增 `spawnedTabId`：登记待关 tab，返回值首字段 `mustDoNow` 给出确切关闭指令。
+  - 新增 `wos_browser_hygiene`：上报已关 tab 与 `agentTabCount`；数量不为 1、或仍有待关 tab 时返回 `ok:false` 并记入 `violations`。
+  - 新增 `wos_human_verify`：prepare 模式把交接写进账本并**直接返回该原样调用的 `bsk_assist` 参数**，
+    判据只接受正向信号（缺 `titleText` / `urlContains` 抛 `CRITERIA_REQUIRED`）；resolve 模式收口。
+  - `wos_download_plan` 在 `humanGate.pending` / 有待关 tab / 收编后未自检时返回 `blocked: true`
+    （带 `requiredTool` / `requiredArgs`），不再给下一批。
+  - `nextStep` 优先返回补救动作；`wos_run_status` 新增 `browserGuard` 与 `blocked` 字段。
+- 工具数 15 → 17；测试断言 87 → 125（smoke 91 + tools-exec 34）。
+
+### Changed
+
+- 守卫用计数器 `intakesSinceHygiene` 判定，而不是比较时间戳——同一毫秒内的先后比较会失效（实测踩过）。
+
+### Why
+
+实测「把规则写进 playbook」不足以保证遵守：长循环里仍会留着下载 tab，遇到挑战也不调 `request-help`，
+结果用户看不到验证页、无法介入。故把这两件事改由工具状态强制：没清干净就不给下一步。
+
 ## [0.2.2] - 2026-10-22
 
 ### Fixed

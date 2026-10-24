@@ -47,6 +47,8 @@ const expected = [
   'wos_records_update',
   'wos_download_plan',
   'wos_pdf_intake',
+  'wos_browser_hygiene',
+  'wos_human_verify',
   'wos_download_audit',
   'wos_parse_plan',
   'wos_parse_audit',
@@ -56,7 +58,8 @@ const expected = [
   'wos_wiki_index',
 ];
 const missing = expected.filter((toolName) => !names.includes(toolName));
-console.log(`期望 15 个工具，缺失：${missing.length === 0 ? '无' : missing.join(', ')}`);
+console.log(`期望 ${expected.length} 个工具，缺失：${missing.length === 0 ? '无' : missing.join(', ')}`);
+console.log(`实际注册 ${names.length} 个：${names.length === expected.length ? '数量一致' : `数量不符（${names.length} vs ${expected.length}）`}`);
 
 // 真实账本迁移（v1 → v2）：可选，用 WOS_TEST_RUN 指定，默认跳过
 const realRun = process.env.WOS_TEST_RUN ?? '';

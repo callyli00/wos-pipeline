@@ -14,6 +14,14 @@ N 出 50–300 区间时，**不许自己加词、删层、改字段、换运算
 页面出现 CAPTCHA / Turnstile / 「Are you a robot?」/「请稍候」/ 滑块 / 点选图 → **立刻 `bsk_assist request-help` 交给用户**。
 不要自己点、不要靠反复刷新硬撞。唯一例外是 Cloudflare 的「Just a moment…」自动放行窗口：先等 8–10 秒重新 observe 一次，仍不通过就交人。
 
+**交接必须走工具，别手搓**：先调 `wos_human_verify`（不带 `resolved`），用 `titleText`（论文标题片段）或 `urlContains` 作判据。它会：
+
+1. 把「已交给用户」写进账本；
+2. **直接返回该原样调用的 `bsk_assist` 参数**（判据已构造成正向信号；`textMissing` 之类会被工具拒收）；
+3. 在你收口前**拦住 `wos_download_plan`**。
+
+用户做完后调 `wos_human_verify {resolved:true, outcome:"passed"}` 收口。没有交接记录就继续往下跑，等于把用户关在门外——实测就是这么卡死的。
+
 **`completionCriteria` 只能用正向信号**（`textExists` / 有区分度的 `urlContains`）：
 
 - ❌ **不要用 `textMissing`**：挑战 iframe 自己会重载，重载那一瞬间「某段文字消失」→ 判据假满足 → 帮助流程立即返回 `completed`，用户还没动手，等于没等。
