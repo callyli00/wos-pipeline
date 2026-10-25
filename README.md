@@ -28,7 +28,7 @@ created → imported → classified → downloading → downloaded → parsed �
 每次推进都有前置条件，不满足就拒绝并说明该补哪一步。`records.md` 是账本的**只读视图**（由 `run.json` 渲染），
 模型没有直接写它的路径——从结构上消灭了「手改 Markdown 表把四张表改坏三张」这类事故。
 
-## 15 个工具
+## 19 个工具
 
 | 阶段 | 工具 | 作用 |
 | --- | --- | --- |
@@ -46,6 +46,8 @@ created → imported → classified → downloading → downloaded → parsed �
 | wiki | `wos_wiki_init` | 建骨架，**默认只预览**，`confirm: true` 才落盘 |
 | | `wos_wiki_stage_raw` | 全文落 `raw/papers/`，补 `source_url/ingested/sha256`，同源重跑按 sha256 跳过 |
 | | `wos_wiki_lint` | 断链/孤儿/index 漏登/标签白名单/超行数/raw 漂移/漏扫层 |
+| | `wos_wiki_query` | 查库：`search` 检索 / `page` 单页（含入链出链）/ `orient` 一次拿全上下文；sources 逗号安全 |
+| | `wos_wiki_archive` | 归档到 `_archive/<日期>/<层>/`；默认只预览并标出入链告警，`confirm:true` 才移动 |
 | | `wos_wiki_index` | 重生 `index.md` + `_meta/BUILD_REPORT.md`（五层全覆盖） |
 
 ## 三条硬规则（写进代码，不只是文档）

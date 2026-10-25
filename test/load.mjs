@@ -55,6 +55,8 @@ const expected = [
   'wos_wiki_init',
   'wos_wiki_stage_raw',
   'wos_wiki_lint',
+  'wos_wiki_query',
+  'wos_wiki_archive',
   'wos_wiki_index',
 ];
 const missing = expected.filter((toolName) => !names.includes(toolName));

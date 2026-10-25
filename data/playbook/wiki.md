@@ -10,9 +10,17 @@
    **不写任何文件**。把这个路径摆给用户点头，再带 `confirm: true` 真正创建；要换位置就在这一步传 `wikiRoot`。
 1. `wos_wiki_init`：建骨架，`_meta/PROCESS.md` 已按账本预填每篇一行。
 2. `wos_wiki_stage_raw`：把已解析全文复制进 `raw/papers/<PDF 主名>/` 并补 raw frontmatter（source_url / ingested / sha256）。同源重跑按 sha256 判等，一致跳过、不一致报 drift。
-3. **Orient 先行（CRITICAL）**：建页前必须读 `SCHEMA.md` + `index.md` + `log.md` 尾部 20–30 条。跳过必造重复页、漏交叉引用。
-4. Bulk Ingest：先读全源 → 跨源识别 entities/concepts → **一次搜索**查已有页 → 一次通过创建/更新 → `wos_wiki_index` 最后只更新一次 → 单条 log 覆盖整批。
+3. **Orient 先行（CRITICAL）**：建页前调 `wos_wiki_query {mode:"orient"}` —— 一次拿到 SCHEMA 的 Domain、标签白名单、index 全量、log 尾部 30 条。跳过必造重复页、漏交叉引用。
+4. Bulk Ingest：先读全源 → 跨源识别 entities/concepts → 用 `wos_wiki_query {text:"…"}` 查重（改页前 `{mode:"page", slug:"…"}` 看入链/出链）→ 一次通过创建/更新 → `wos_wiki_index` 最后只更新一次 → 单条 log 覆盖整批。
 5. `wos_wiki_lint` 收口，按报告补链接与标签。
+6. 页面骨架直接抄 `_meta/TEMPLATES.md`（paper / entity / concept / comparison / query 五类）。
+
+## 查库与归档
+
+- **查「库里有什么」**：`wos_wiki_query {text:"咖啡环"}`（命中标题加权最高）或 `{tags:["self-assembly"], layer:"concepts"}`。
+- **读单页**：`{mode:"page", slug:"evaporation-induced-self-assembly"}` → 正文 + 出站 + **入链**。入链为空说明它没被任何页引用，按规则该补。
+- **归档**：内容被取代时先 `wos_wiki_archive {slugs:[…]}` 预览（会标出仍有入链的页），改掉入链后再带 `confirm:true` 执行，
+  最后跑 `wos_wiki_index` 让分层计数同步。归档是**移动**不是删除，落在 `_archive/<日期>/<层>/`，随时可取回。
 
 ## 建页规则
 

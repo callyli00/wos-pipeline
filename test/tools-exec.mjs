@@ -170,6 +170,86 @@ async function main() {
   check('agentTabCount=1 上报通过', goodHygiene.ok === true && goodHygiene.agentTabCount === 1, goodHygiene.code ?? JSON.stringify(goodHygiene.ok));
   check('自检结果 lossless', scan(goodHygiene).length === 0, scan(goodHygiene).join(', '));
 
+  console.log('\n[6] 知识库查询与归档（llm-wiki 的 query / searching / archiving）');
+
+  const conceptA = path.join(wikiRoot, 'concepts', 'evaporation-induced-self-assembly.md');
+  fs.mkdirSync(path.dirname(conceptA), { recursive: true });
+  fs.writeFileSync(conceptA, [
+    '---',
+    'title: "蒸发诱导自组装"',
+    'type: concept',
+    'tags: [self-assembly, evaporation]',
+    'sources: ["raw/papers/001_Fe,Co,Ni_alloy/full.md", "raw/papers/002_oxide/full.md"]',
+    'summary: "溶剂蒸发驱动纳米颗粒自发有序堆积"',
+    'confidence: high',
+    'contested: false',
+    'created: 2026-01-01',
+    'updated: 2026-01-01',
+    '---',
+    '',
+    '正文提到 coffee ring 效应，并与 [[mesoporous-carbon]] 对照。',
+  ].join('\n'), 'utf8');
+  const conceptB = path.join(wikiRoot, 'concepts', 'mesoporous-carbon.md');
+  fs.writeFileSync(conceptB, [
+    '---',
+    'title: "介孔碳"',
+    'type: concept',
+    'tags: [mesoporous]',
+    'sources: ["raw/papers/003_carbon/full.md"]',
+    'summary: "有序介孔碳骨架"',
+    'confidence: medium',
+    'created: 2026-01-01',
+    'updated: 2026-01-01',
+    '---',
+    '',
+    '与 [[evaporation-induced-self-assembly]] 的关系见该页。',
+  ].join('\n'), 'utf8');
+
+  const search = await call('wos_wiki_query', { wikiRoot, text: 'coffee' });
+  check('query 按关键词命中', search.total >= 1 && search.hits[0].slug === 'evaporation-induced-self-assembly', JSON.stringify(search.total));
+  check('query 返回摘要片段', String(search.hits[0]?.snippet ?? '').length > 0);
+  check('query 结果 lossless', scan(search).length === 0, scan(search).join(', '));
+
+  const byTag = await call('wos_wiki_query', { wikiRoot, tags: ['evaporation'] });
+  check('query 按标签过滤', byTag.total === 1 && byTag.hits[0].slug === 'evaporation-induced-self-assembly', JSON.stringify(byTag.total));
+
+  const byLayer = await call('wos_wiki_query', { wikiRoot, layer: 'papers' });
+  check('query 按层过滤（papers 层为空）', byLayer.total === 0, JSON.stringify(byLayer.total));
+
+  const onePage = await call('wos_wiki_query', { wikiRoot, mode: 'page', slug: 'evaporation-induced-self-assembly' });
+  check('query page 取到页面', onePage.found === true && onePage.page.layer === 'concepts');
+  check('sources 里的逗号目录名没被切坏', onePage.page.sources.length === 2 && onePage.page.sources[0].includes('Fe,Co,Ni'), JSON.stringify(onePage.page.sources));
+  check('page 给出出站链接', onePage.outLinks.includes('mesoporous-carbon'), JSON.stringify(onePage.outLinks));
+  check('page 给出入链', onePage.backlinks.includes('concepts/mesoporous-carbon'), JSON.stringify(onePage.backlinks));
+
+  const missingPage = await call('wos_wiki_query', { wikiRoot, mode: 'page', slug: 'nope' });
+  check('page 找不到时不报错而是 found:false', missingPage.found === false, JSON.stringify(missingPage.found));
+
+  const orient = await call('wos_wiki_query', { wikiRoot, mode: 'orient' });
+  check('orient 带标签白名单', Array.isArray(orient.taxonomy) && orient.taxonomy.length > 0, JSON.stringify(orient.taxonomy?.length));
+  check('orient 带 index 与 log', String(orient.index).includes('Wiki Index') && String(orient.logTail).length > 0);
+  check('orient 带分层计数', orient.layerCounts?.concepts === 2, JSON.stringify(orient.layerCounts));
+  check('orient 结果 lossless', scan(orient).length === 0, scan(orient).join(', '));
+
+  let archiveNoTarget = null;
+  try {
+    await call('wos_wiki_archive', { wikiRoot, confirm: true });
+  } catch (error) {
+    archiveNoTarget = error;
+  }
+  check('归档不给目标时拒绝', String(archiveNoTarget?.message ?? '').includes('目标不明确'));
+
+  const archivePreview = await call('wos_wiki_archive', { wikiRoot, slugs: ['mesoporous-carbon'] });
+  check('归档默认只预览', archivePreview.mode === 'preview' && archivePreview.requiresConfirmation === true, archivePreview.mode);
+  check('预览标出入链告警', archivePreview.hasInbound === true);
+  check('预览不动文件', fs.existsSync(conceptB));
+
+  const archiveDone = await call('wos_wiki_archive', { wikiRoot, slugs: ['mesoporous-carbon'], confirm: true, reason: '测试归档' });
+  check('confirm 后真的移动', archiveDone.mode === 'done' && archiveDone.archived === 1, JSON.stringify(archiveDone.archived));
+  check('源文件已离开对应层', !fs.existsSync(conceptB));
+  check('归档后 index 计数同步', (await call('wos_wiki_index', { wikiRoot })).layers.find((l) => l.layer === 'concepts').count === 1);
+  check('初始化时写了页面模板', fs.existsSync(path.join(wikiRoot, '_meta', 'TEMPLATES.md')));
+
   // 复原真实账本（测试不该留下痕迹）
   if (backupJson) fs.writeFileSync(runJsonPath, backupJson, 'utf8');
   if (backupMd) fs.writeFileSync(mdPath, backupMd, 'utf8');

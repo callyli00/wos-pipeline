@@ -2,6 +2,25 @@
 
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.4.0] - 2026-10-25
+
+补齐 llm-wiki 余下的三块能力（此前只移植了「可判定」的机械部分）。
+
+### Added
+
+- **`wos_wiki_query`** —— 查库，三种模式：
+  - `search`（默认）：按 `text` / `tags` / `layer` 过滤并排序（命中标题加权最高），返回摘要片段、标签、置信度、来源、出站链接；
+  - `page`：取单页正文 + 出站链接 + **入链**；入链为空即提示"该页没被引用"；
+  - `orient`：一次返回 SCHEMA 的 Domain、标签白名单、`index.md` 全量与 `log.md` 尾部 N 条——把「Orient 先行」从一个规矩变成一个动作。
+  - `sources` 走引号串优先解析：`raw/papers/001_Fe,Co,Ni_alloy/full.md` 这类带逗号的目录名不会被切成两个源（此前 `parseFrontmatter` 的内联列表会切坏）。
+- **`wos_wiki_archive`** —— 归档：移入 `_archive/<日期>/<层>/`，**默认只预览**并标出仍被链入的页；`confirm:true` 才移动；写 log；归档后由 `wos_wiki_index` 同步分层计数。
+- **页面模板**：`wos_wiki_init` 现在同时写 `_meta/TEMPLATES.md`，含 paper / entity / concept / comparison / query 五类页面骨架。
+- 工具 17 → 19；测试断言 125 → 147（smoke 91 + tools-exec 56）。
+
+### Changed
+
+- `data/playbook/wiki.md`：Orient 改为调 `wos_wiki_query {mode:"orient"}`；查重与改页前看入链改为 `query`；新增「查库与归档」一节。
+
 ## [0.3.1] - 2026-10-24
 
 ### Changed
